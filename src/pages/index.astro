@@ -1,0 +1,20 @@
+---
+import Base from '../layouts/Base.astro';
+import Hero from '../components/Hero.astro';
+import Features from '../components/Features.astro';
+import Trust from '../components/Trust.astro';
+import Pricing from '../components/Pricing.astro';
+import Faq from '../components/Faq.astro';
+import Footer from '../components/Footer.astro';
+import { loadSite } from '../lib/site.mjs';
+
+const site = loadSite();
+---
+<Base site={site}>
+  <Hero site={site} />
+  <Features site={site} />
+  <Trust site={site} />
+  <Pricing site={site} />
+  <Faq site={site} />
+  <Footer site={site} />
+</Base>

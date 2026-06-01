@@ -1,0 +1,95 @@
+---
+import '../styles/global.css';
+
+const { site, title, description, noindex = false } = Astro.props;
+const seo = site.seo;
+const pageTitle = title ?? seo.title;
+const pageDesc = description ?? seo.description;
+const canonical = new URL(Astro.url.pathname, Astro.site).href;
+const ogImage = seo.ogImage ? new URL(seo.ogImage, Astro.site).href : null;
+
+const org = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: site.brand,
+  url: Astro.site?.href,
+  ...(ogImage ? { logo: ogImage } : {}),
+};
+const service = {
+  '@context': 'https://schema.org',
+  '@type': 'Service',
+  serviceType: 'Аренда виртуального сервера (VPS)',
+  provider: { '@type': 'Organization', name: site.brand },
+  areaServed: 'RU',
+  offers: (site.pricing?.plans ?? []).map((p) => ({
+    '@type': 'Offer',
+    name: p.name,
+    price: String(p.price).replace(/[^\d.]/g, ''),
+    priceCurrency: 'RUB',
+  })),
+};
+const faq = site.faq?.length
+  ? {
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      mainEntity: site.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    }
+  : null;
+---
+
+<!doctype html>
+<html lang={site.lang ?? 'ru'}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{pageTitle}</title>
+    <meta name="description" content={pageDesc} />
+    {noindex && <meta name="robots" content="noindex, nofollow" />}
+    <link rel="canonical" href={canonical} />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={site.brand} />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={pageDesc} />
+    <meta property="og:url" content={canonical} />
+    {ogImage && <meta property="og:image" content={ogImage} />}
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <script type="application/ld+json" set:html={JSON.stringify(org)} />
+    <script type="application/ld+json" set:html={JSON.stringify(service)} />
+    {faq && <script type="application/ld+json" set:html={JSON.stringify(faq)} />}
+    {site.analytics?.ga4 && (
+      <Fragment>
+        <script async src={`https://www.googletagmanager.com/gtag/js?id=${site.analytics.ga4}`} is:inline></script>
+        <script is:inline set:html={`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${site.analytics.ga4}');`} />
+      </Fragment>
+    )}
+    {site.analytics?.yandexMetrika && (
+      <script is:inline set:html={`(function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};m[i].l=1*new Date();k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})(window,document,'script','https://mc.yandex.ru/metrika/tag.js','ym');ym(${site.analytics.yandexMetrika},'init',{clickmap:true,trackLinks:true,accurateTrackBounce:true});`} />
+    )}
+  </head>
+  <body>
+    <slot />
+    <script is:inline>
+      // Захват меток атрибуции (ymid/gcid/fcid/utm_*) и пронос их в ссылки /buy → дальше в оплату/success.
+      (function () {
+        var KEYS = ['ymid', 'gcid', 'fcid', 'utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term'];
+        var qs = new URLSearchParams(location.search);
+        var store = {};
+        try { store = JSON.parse(sessionStorage.getItem('attr') || '{}'); } catch (e) {}
+        KEYS.forEach(function (k) { var v = qs.get(k); if (v) store[k] = v; });
+        try { sessionStorage.setItem('attr', JSON.stringify(store)); } catch (e) {}
+        document.querySelectorAll('a[href*="/buy/"]').forEach(function (a) {
+          try {
+            var u = new URL(a.href, location.origin);
+            KEYS.forEach(function (k) { if (store[k] && !u.searchParams.get(k)) u.searchParams.set(k, store[k]); });
+            a.href = u.toString();
+          } catch (e) {}
+        });
+      })();
+    </script>
+  </body>
+</html>

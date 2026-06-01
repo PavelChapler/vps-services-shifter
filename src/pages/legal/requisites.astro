@@ -1,0 +1,19 @@
+---
+import Base from '../../layouts/Base.astro';
+import { loadSite } from '../../lib/site.mjs';
+const site = loadSite();
+const l = site.legal ?? {};
+---
+<Base site={site} title={`Реквизиты — ${site.brand}`} description="Реквизиты продавца.">
+  <main class="section"><div class="container legal">
+    <h1>Реквизиты</h1>
+    <p class="muted small">⚠️ Заполнить реальными данными продавца перед публикацией.</p>
+    <ul>
+      <li>Наименование: {l.company}</li>
+      {l.inn && <li>ИНН: {l.inn}</li>}
+      {l.ogrnip && <li>ОГРНИП: {l.ogrnip}</li>}
+      <li>E-mail: {l.email}</li>
+    </ul>
+  </div></main>
+</Base>
+<style>.legal{max-width:760px}.legal ul{line-height:2;list-style:none;padding:0}</style>

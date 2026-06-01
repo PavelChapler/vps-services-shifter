@@ -1,0 +1,30 @@
+---
+const { site } = Astro.props;
+const l = site.legal ?? {};
+const year = new Date().getFullYear();
+---
+<footer class="footer">
+  <div class="container">
+    <div class="foot-grid">
+      <div>
+        <strong>{site.brand}</strong>
+        <p class="muted small">{l.company}{l.inn ? ` · ИНН ${l.inn}` : ''}</p>
+      </div>
+      <nav class="foot-links">
+        {l.offerUrl && <a href={l.offerUrl}>Оферта</a>}
+        {l.privacyUrl && <a href={l.privacyUrl}>Политика конфиденциальности</a>}
+        {l.requisitesUrl && <a href={l.requisitesUrl}>Реквизиты</a>}
+      </nav>
+    </div>
+    <p class="muted small copyright">© {year} {site.brand}. Сервис предназначен только для законного использования.</p>
+  </div>
+</footer>
+<style>
+  .footer { border-top: 1px solid var(--line); padding-block: 40px; }
+  .foot-grid { display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
+  .foot-links { display: flex; gap: 18px; flex-wrap: wrap; align-items: center; }
+  .foot-links a { color: var(--muted); text-decoration: none; font-size: 14px; }
+  .foot-links a:hover { color: var(--fg); }
+  .small { font-size: 13px; }
+  .copyright { margin-top: 18px; }
+</style>

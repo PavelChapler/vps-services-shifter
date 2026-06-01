@@ -1,0 +1,17 @@
+---
+import CtaButton from './CtaButton.astro';
+const { site } = Astro.props;
+const h = site.hero;
+---
+<header class="section hero">
+  <div class="container center">
+    {h.eyebrow && <span class="eyebrow">{h.eyebrow}</span>}
+    <h1>{h.h1}</h1>
+    <p class="lead center">{h.sub}</p>
+    <div class="hero-cta"><CtaButton href="#pricing" label={h.cta} /></div>
+  </div>
+</header>
+<style>
+  .hero { padding-top: clamp(56px, 9vw, 110px); background: radial-gradient(80% 120% at 50% -20%, rgba(91,140,255,.18), transparent 60%); }
+  .hero-cta { margin-top: 26px; }
+</style>

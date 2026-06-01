@@ -1,0 +1,31 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm:*)",
+      "Bash(npx:*)",
+      "Bash(node:*)",
+      "Bash(pnpm:*)",
+      "Bash(yarn:*)",
+      "Bash(npx astro:*)",
+      "Bash(npx lighthouse:*)",
+      "Bash(npx serve:*)",
+      "Bash(git:*)",
+      "Bash(ls:*)",
+      "Bash(mkdir:*)",
+      "Bash(cp:*)",
+      "Bash(mv:*)",
+      "WebSearch",
+      "WebFetch(domain:web.dev)",
+      "WebFetch(domain:developers.google.com)",
+      "WebFetch(domain:developer.mozilla.org)",
+      "WebFetch(domain:schema.org)",
+      "WebFetch(domain:docs.astro.build)",
+      "WebFetch(domain:yandex.ru)",
+      "WebFetch(domain:ahrefs.com)",
+      "WebFetch(domain:semrush.com)",
+      "WebFetch(domain:vanya.im)",
+      "WebFetch(domain:vanyavps.com)",
+      "WebFetch(domain:bebra.lol)"
+    ]
+  }
+}

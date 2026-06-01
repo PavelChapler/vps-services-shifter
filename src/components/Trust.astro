@@ -1,0 +1,30 @@
+---
+const { site } = Astro.props;
+const t = site.trust ?? {};
+---
+<section class="section" id="trust">
+  <div class="container">
+    {t.stats && (
+      <div class="grid cols-3">
+        {t.stats.map((s) => (
+          <div class="stat center"><div class="stat-v">{s.value}</div><div class="muted">{s.label}</div></div>
+        ))}
+      </div>
+    )}
+    {t.reviews && (
+      <div class="grid cols-2" style="margin-top:32px">
+        {t.reviews.map((r) => (
+          <figure class="card review">
+            <blockquote>«{r.text}»</blockquote>
+            <figcaption class="muted">— {r.name}</figcaption>
+          </figure>
+        ))}
+      </div>
+    )}
+  </div>
+</section>
+<style>
+  .stat-v { font-size: clamp(30px,5vw,46px); font-weight: 700; color: var(--accent-2); }
+  figure { margin: 0; }
+  .review blockquote { margin: 0 0 .6em; }
+</style>

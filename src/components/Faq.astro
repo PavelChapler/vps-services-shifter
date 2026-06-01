@@ -1,0 +1,25 @@
+---
+const { site } = Astro.props;
+---
+<section class="section" id="faq">
+  <div class="container faq-wrap">
+    <h2 class="center">Частые вопросы</h2>
+    <div style="margin-top:24px">
+      {site.faq.map((f) => (
+        <details class="card">
+          <summary>{f.q}</summary>
+          <p>{f.a}</p>
+        </details>
+      ))}
+    </div>
+  </div>
+</section>
+<style>
+  .faq-wrap { max-width: 760px; }
+  details { margin-bottom: 12px; }
+  summary { cursor: pointer; font-weight: 600; list-style: none; }
+  summary::-webkit-details-marker { display: none; }
+  summary::after { content: "+"; float: right; color: var(--accent); }
+  details[open] summary::after { content: "–"; }
+  details p { margin: 14px 0 0; }
+</style>

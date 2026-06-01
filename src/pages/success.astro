@@ -1,0 +1,53 @@
+---
+import Base from '../layouts/Base.astro';
+import { loadSite } from '../lib/site.mjs';
+const site = loadSite();
+---
+<Base site={site} title={`Доступ — ${site.brand}`} description="Ваш ключ доступа." noindex={true}>
+  <main class="section"><div class="container checkout center">
+    <h1>Спасибо за оплату!</h1>
+    <p class="lead center">Ваш ключ доступа готов. Скопируйте его и добавьте в приложение.</p>
+    <div class="card key-box">
+      <code id="key">Готовим ключ…</code>
+      <button class="btn btn-ghost" type="button" id="copy">Скопировать</button>
+    </div>
+    <p class="muted small">Ключ также отправлен на ваш e-mail. Поддерживаются Windows, macOS, Linux, Android, iOS.</p>
+  </div></main>
+
+  <script define:vars={{ apiBase: site.checkout?.apiBase ?? '' }}>
+    // Получение выданного Lava.top ключа через общий API: GET {apiBase}/key?order=<id> → { key }.
+    // order приходит в success_url от Lava. Поллим — выдача может прийти по webhook с задержкой.
+    (function () {
+      var el = document.getElementById('key');
+      var order = new URLSearchParams(location.search).get('order');
+      document.getElementById('copy').addEventListener('click', function () {
+        if (navigator.clipboard) navigator.clipboard.writeText(el.textContent);
+      });
+
+      if (!apiBase || !order) {
+        el.textContent = 'XOR-DEMO-KEY (демо — заполните checkout.apiBase для боевой выдачи)';
+        return;
+      }
+
+      var tries = 0;
+      (function poll() {
+        fetch(apiBase.replace(/\/$/, '') + '/key?order=' + encodeURIComponent(order))
+          .then(function (r) { return r.json(); })
+          .then(function (d) {
+            if (d && d.key) { el.textContent = d.key; }
+            else if (++tries < 10) { setTimeout(poll, 2000); }
+            else { el.textContent = 'Ключ придёт на e-mail в течение пары минут.'; }
+          })
+          .catch(function () {
+            if (++tries < 10) { setTimeout(poll, 2000); }
+            else { el.textContent = 'Ключ отправлен на e-mail.'; }
+          });
+      })();
+    })();
+  </script>
+</Base>
+<style>
+  .checkout { max-width: 600px; }
+  .key-box { display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap; text-align: left; }
+  code { font-family: ui-monospace, Menlo, Consolas, monospace; word-break: break-all; }
+</style>

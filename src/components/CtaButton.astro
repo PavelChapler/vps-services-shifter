@@ -1,0 +1,8 @@
+---
+const { href, label, variant = 'primary', external = false } = Astro.props;
+---
+{external ? (
+  <a class={`btn btn-${variant}`} href={href} rel="nofollow" target="_blank">{label}</a>
+) : (
+  <a class={`btn btn-${variant}`} href={href}>{label}</a>
+)}

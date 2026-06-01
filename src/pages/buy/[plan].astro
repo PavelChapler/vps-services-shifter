@@ -1,0 +1,76 @@
+---
+import Base from '../../layouts/Base.astro';
+import { loadSite } from '../../lib/site.mjs';
+
+export function getStaticPaths() {
+  const site = loadSite();
+  return (site.pricing?.plans ?? []).map((p) => ({ params: { plan: p.slug }, props: { plan: p } }));
+}
+
+const site = loadSite();
+const { plan } = Astro.props;
+---
+<Base site={site} title={`Оформление — ${plan.name} · ${site.brand}`} description="Оформление подписки." noindex={true}>
+  <main class="section"><div class="container checkout">
+    <h1>Оформление</h1>
+    <div class="card summary">
+      <div class="row"><span>Тариф</span><strong>{plan.name}</strong></div>
+      <div class="row"><span>Стоимость</span><strong>{plan.price}{plan.priceNote ? ` · ${plan.priceNote}` : ''}</strong></div>
+    </div>
+    <form id="checkout" class="card">
+      <label>E-mail (для чека и доступа)
+        <input type="email" name="email" required placeholder="you@example.com" />
+      </label>
+      <fieldset>
+        <legend>Способ оплаты</legend>
+        <label><input type="radio" name="method" value="card" checked /> Карта Мир / СБП</label>
+        <label><input type="radio" name="method" value="crypto" /> Криптовалюта (USDT)</label>
+      </fieldset>
+      <label class="agree"><input type="checkbox" name="agree" required /> Соглашаюсь с <a href={site.legal?.offerUrl}>офертой</a> и <a href={site.legal?.privacyUrl}>политикой конфиденциальности</a></label>
+      <button class="btn btn-primary" type="submit">Оплатить {plan.price}</button>
+    </form>
+  </div></main>
+
+  <script define:vars={{ slug: plan.slug, apiBase: site.checkout?.apiBase ?? '' }}>
+    // Поток: создать счёт через общий API-обёртку над Lava.top → редирект на checkout Lava.
+    // API: POST {apiBase}/pay { plan, email, method, attr } → { url }. success_url у Lava = /success/?order=<id>.
+    document.getElementById('checkout').addEventListener('submit', function (e) {
+      e.preventDefault();
+      var attr = {};
+      try { attr = JSON.parse(sessionStorage.getItem('attr') || '{}'); } catch (_) {}
+      var fd = new FormData(e.target);
+      var btn = e.target.querySelector('button[type=submit]');
+
+      // Демо-режим без бэкенда (apiBase пуст): сразу на /success с метками.
+      if (!apiBase) {
+        var p = new URLSearchParams({ plan: slug });
+        Object.keys(attr).forEach(function (k) { p.set(k, attr[k]); });
+        location.href = '/success/?' + p.toString();
+        return;
+      }
+
+      btn.disabled = true; btn.textContent = 'Создаём оплату…';
+      fetch(apiBase.replace(/\/$/, '') + '/pay', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plan: slug, email: fd.get('email'), method: fd.get('method') || 'card', attr: attr }),
+      })
+        .then(function (r) { return r.json(); })
+        .then(function (d) {
+          if (d && d.url) { location.href = d.url; }
+          else { btn.disabled = false; btn.textContent = 'Оплатить'; alert('Не удалось создать оплату. Попробуйте ещё раз.'); }
+        })
+        .catch(function () { btn.disabled = false; btn.textContent = 'Оплатить'; alert('Ошибка сети. Попробуйте ещё раз.'); });
+    });
+  </script>
+</Base>
+<style>
+  .checkout { max-width: 560px; }
+  .summary .row { display: flex; justify-content: space-between; padding: 6px 0; }
+  form label { display: block; margin-bottom: 14px; }
+  input[type=email] { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg-soft); color: var(--fg); margin-top: 6px; }
+  fieldset { border: 1px solid var(--line); border-radius: 10px; margin: 0 0 16px; padding: 12px 16px; }
+  fieldset label, .agree { display: flex; gap: 8px; align-items: center; margin: 8px 0; }
+  .agree { font-size: 14px; color: var(--muted); }
+  .btn { width: 100%; }
+</style>
