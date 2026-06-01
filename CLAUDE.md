@@ -64,13 +64,14 @@
 
 **Метки атрибуции.** С рекламы в URL приходят `ymid` (Яндекс), `gcid` (Google), `fcid` (Facebook/Meta) + `utm_*`. Захватываются на лендинге (`Base.astro`), прокидываются в ссылки `/buy` и дальше в `success_url` провайдера — чтобы покупка засчиталась как конверсия в нужной системе аналитики.
 
-**Провайдер: Lava.top** — хостинг-чекаут + авто-выдача цифрового «товара»-ключа (карты РФ/зарубеж). Крипту при желании добавить через CryptoCloud. ЮKassa/банки VPN-мерчантов часто режут — не используем.
+**Провайдер: Platega** ([docs.platega.io](https://docs.platega.io)) — PSP: карты Мир/СБП/крипта. Шлюз **без авто-выдачи товара** — поэтому ключ выдаёт **наш бэкенд** по webhook'у (`issueKey()`), не провайдер. Auth — заголовки `X-MerchantId`/`X-Secret`.
 
-**Бэкенд — тонкий общий API-обёртка над Lava.top** (один на все домены; статичные домены дёргают его через `fetch`, CORS открыт на них; секрет Lava — только server-side). Контракт:
-- `POST {apiBase}/pay` `{plan,email,method,attr}` → `{url}` — создаёт счёт в Lava (товар из `checkout.products[plan]`), `success_url = …/success/?order=<id>`, возвращает URL checkout'а.
-- `GET {apiBase}/key?order=<id>` → `{key}` — отдаёт выданный после оплаты ключ для показа на `/success` (фронт поллит).
+**Бэкенд — тонкий общий API над Platega** (один на все домены; статичные домены дёргают через `fetch`, CORS открыт; креды Platega только server-side). Контракт:
+- `POST {apiBase}/pay` `{plan,email,method,attr}` → `{url}` — создаёт транзакцию Platega (`transaction/process`, сумма из `api/products.json[plan]`), `returnUrl=…/success/?order=<id>`, возвращает ссылку на оплату.
+- `POST {apiBase}/webhook/platega` — Platega шлёт статус `CONFIRMED` → бэкенд выдаёт ключ (`issueKey`) и сохраняет под order.
+- `GET {apiBase}/key?order=<id>` → `{key}` — ключ после оплаты для `/success` (фронт поллит).
 
-Фронт реализован: `/buy/[plan].astro` (создание счёта) и `/success.astro` (поллинг ключа), оба с демо-фолбэком при пустом `apiBase`. **API-сервис написан в `api/`** (Node + Express + `node:sqlite`): `/pay`, `/key`, webhook Lava, пул ключей + TODO под реальный минт Xor; демо-режим без кредов (`cd api && npm run smoke`).
+Фронт реализован: `/buy/[plan].astro` (создание платежа) и `/success.astro` (поллинг ключа), оба с демо-фолбэком при пустом `apiBase`. **API-сервис написан в `api/`** (Node + Express + `node:sqlite`): `/pay`, `/key`, `/webhook/platega`, пул ключей + TODO под реальный минт Xor; демо-режим без кредов (`cd api && npm run smoke`).
 
 **Страницы оплаты** `/buy/<slug>` и `/success` — `noindex`. Тарифы/цены/оферта на сайте совпадают с реальными.
 

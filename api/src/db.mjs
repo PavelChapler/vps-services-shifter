@@ -12,7 +12,7 @@ db.exec(`
     email TEXT,
     status TEXT NOT NULL DEFAULT 'pending',
     key TEXT,
-    lava_invoice_id TEXT,
+    provider_txn_id TEXT,
     origin TEXT,
     created_at INTEGER NOT NULL
   );
@@ -27,17 +27,13 @@ db.exec(`
 
 export function createOrder(o) {
   db.prepare(
-    `INSERT INTO orders (id, plan, email, status, lava_invoice_id, origin, created_at)
+    `INSERT INTO orders (id, plan, email, status, provider_txn_id, origin, created_at)
      VALUES (?, ?, ?, 'pending', ?, ?, ?)`
-  ).run(o.id, o.plan, o.email ?? null, o.lavaInvoiceId ?? null, o.origin ?? null, Date.now());
+  ).run(o.id, o.plan, o.email ?? null, o.providerTxnId ?? null, o.origin ?? null, Date.now());
 }
 
 export function getOrder(id) {
   return db.prepare('SELECT * FROM orders WHERE id = ?').get(id);
-}
-
-export function findOrderByInvoice(invoiceId) {
-  return db.prepare('SELECT * FROM orders WHERE lava_invoice_id = ?').get(invoiceId);
 }
 
 export function markPaidWithKey(id, key) {

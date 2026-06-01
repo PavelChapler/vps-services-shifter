@@ -1,9 +1,9 @@
 import express from 'express';
 import crypto from 'node:crypto';
 import { pathToFileURL } from 'node:url';
-import { PORT, products, ALLOWED_ORIGINS, LAVA_API_KEY } from './config.mjs';
-import { createOrder, getOrder, findOrderByInvoice, markPaidWithKey } from './db.mjs';
-import { createInvoice, verifyWebhook } from './lava.mjs';
+import { PORT, products, ALLOWED_ORIGINS, PLATEGA_MERCHANT_ID } from './config.mjs';
+import { createOrder, getOrder, markPaidWithKey } from './db.mjs';
+import { createTransaction, verifyWebhook } from './platega.mjs';
 import { issueKey } from './keys.mjs';
 
 const app = express();
@@ -20,31 +20,32 @@ app.use((req, res, next) => {
   next();
 });
 
-// Webhook — сырое тело (для проверки подписи); остальное — JSON.
-app.use('/webhook/lava', express.raw({ type: '*/*' }));
-app.use((req, res, next) => (req.path === '/webhook/lava' ? next() : express.json()(req, res, next)));
+// Webhook — сырое тело; остальное — JSON.
+app.use('/webhook/platega', express.raw({ type: '*/*' }));
+app.use((req, res, next) => (req.path === '/webhook/platega' ? next() : express.json()(req, res, next)));
 
-// --- POST /pay → создать счёт, вернуть ссылку на оплату ---
+// --- POST /pay → создать транзакцию Platega, вернуть ссылку на оплату ---
 app.post('/pay', async (req, res) => {
   try {
-    const { plan, email } = req.body || {};
+    const { plan, email, method } = req.body || {};
     const product = products[plan];
     if (!product) return res.status(400).json({ error: 'unknown plan' });
 
     const orderId = crypto.randomUUID();
     const origin = req.headers.origin || '';
-    const successUrl = `${origin}/success/?order=${orderId}`;
+    const returnUrl = `${origin}/success/?order=${orderId}`;
+    const failedUrl = `${origin}/buy/${plan}/?failed=1`;
 
-    // Демо-режим без кредов Lava: считаем оплаченным сразу и выдаём ключ из пула.
-    if (!LAVA_API_KEY) {
+    // Демо-режим без кредов Platega: считаем оплаченным сразу и выдаём ключ из пула.
+    if (!PLATEGA_MERCHANT_ID) {
       createOrder({ id: orderId, plan, email, origin });
       const key = issueKey({ id: orderId, plan });
       if (key) markPaidWithKey(orderId, key);
-      return res.json({ url: successUrl, order: orderId, demo: true });
+      return res.json({ url: returnUrl, order: orderId, demo: true });
     }
 
-    const { url, invoiceId } = await createInvoice({ product, email, orderId, successUrl });
-    createOrder({ id: orderId, plan, email, lavaInvoiceId: invoiceId, origin });
+    const { url, transactionId } = await createTransaction({ orderId, method, product, returnUrl, failedUrl });
+    createOrder({ id: orderId, plan, email, providerTxnId: transactionId, origin });
     res.json({ url, order: orderId });
   } catch (e) {
     console.error('[pay]', e.message);
@@ -60,21 +61,19 @@ app.get('/key', (req, res) => {
   res.json({ key: order.key });
 });
 
-// --- POST /webhook/lava → подтверждение оплаты, выдача ключа ---
-app.post('/webhook/lava', (req, res) => {
+// --- POST /webhook/platega → подтверждение оплаты, выдача ключа ---
+app.post('/webhook/platega', (req, res) => {
+  if (!verifyWebhook(req.headers)) return res.sendStatus(401);
+
   const raw = Buffer.isBuffer(req.body) ? req.body.toString('utf8') : '';
-  const sig = req.headers['x-signature'] || req.headers['signature'] || '';
-  if (!verifyWebhook(raw, sig)) return res.sendStatus(401);
+  let p = {};
+  try { p = JSON.parse(raw); } catch { return res.sendStatus(400); }
 
-  let payload = {};
-  try { payload = JSON.parse(raw); } catch { return res.sendStatus(400); }
+  const confirmed = String(p.status || '').toUpperCase() === 'CONFIRMED';
+  const orderId = p.payload || p.id; // мы кладём orderId и в id, и в payload
+  if (!confirmed || !orderId) return res.sendStatus(200);
 
-  // TODO(Lava): сверить имена полей статуса/идентификатора счёта с доками.
-  const invoiceId = payload.invoiceId || payload.id;
-  const paid = ['paid', 'success', 'completed'].includes(payload.status);
-  if (!invoiceId || !paid) return res.sendStatus(200);
-
-  const order = findOrderByInvoice(invoiceId);
+  const order = getOrder(orderId);
   if (order && order.status !== 'paid') {
     const key = issueKey(order);
     if (key) markPaidWithKey(order.id, key);
@@ -83,10 +82,10 @@ app.post('/webhook/lava', (req, res) => {
   res.sendStatus(200);
 });
 
-app.get('/health', (_req, res) => res.json({ ok: true, demo: !LAVA_API_KEY }));
+app.get('/health', (_req, res) => res.json({ ok: true, demo: !PLATEGA_MERCHANT_ID }));
 
 export function startServer() {
-  return app.listen(PORT, () => console.log(`API на http://localhost:${PORT}  (demo=${!LAVA_API_KEY})`));
+  return app.listen(PORT, () => console.log(`API на http://localhost:${PORT}  (demo=${!PLATEGA_MERCHANT_ID})`));
 }
 
 // Авто-старт только при прямом запуске (node src/index.mjs), не при импорте из тестов.

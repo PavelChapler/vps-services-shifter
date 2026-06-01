@@ -1,5 +1,5 @@
 {
-  "1month": { "lavaProductId": "", "title": "Xor — 1 месяц", "price": 199 },
-  "1year":  { "lavaProductId": "", "title": "Xor — 1 год",   "price": 1188 },
-  "2years": { "lavaProductId": "", "title": "Xor — 2 года",  "price": 1896 }
+  "1month": { "amount": 199,  "currency": "RUB", "title": "Xor — 1 месяц" },
+  "1year":  { "amount": 1188, "currency": "RUB", "title": "Xor — 1 год" },
+  "2years": { "amount": 1896, "currency": "RUB", "title": "Xor — 2 года" }
 }

@@ -57,9 +57,9 @@
     "ga4": ""
   },
   "checkout": {
-    "provider": "lava",
+    "provider": "platega",
     "methods": ["card", "crypto"],
-    "apiBase": ""
+    "apiBase": "http://localhost:8787"
   },
   "legal": {
     "company": "ИП Пример И. И.",

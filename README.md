@@ -27,20 +27,21 @@ SITE=mydomain npm run preview
 Залить `dist/` на любой статический хостинг/CDN. Каждый домен билдится со своим `SITE`.
 
 ## Что заполнить перед боем
-- `checkout.apiBase` — URL общего API-обёртки над Lava.top (см. ниже).
-- `api/products.json` — id товаров Lava.top для каждого тарифа (slug → productId).
+- `checkout.apiBase` — URL общего API над Platega (см. ниже).
+- `api/products.json` — цены тарифов (slug → amount/currency); креды Platega — в `api/.env`.
 - `legal.*` — реальные реквизиты продавца (ИП/ООО/самозанятый).
 - `analytics.*` — id Яндекс.Метрики / GA4.
 - `src/pages/legal/*` — **шаблоны**, финальную редакцию оферты/политики согласует юрист.
 
-## Платёжный бэкенд (Lava.top)
-Оплата и выдача ключа — на сайте, но через **тонкий общий API** (один на все домены; держит секрет Lava server-side; CORS открыт на домены-лендинги). Лендинг — статика, дёргает API через `fetch`.
+## Платёжный бэкенд (Platega)
+Оплата на сайте через [Platega](https://docs.platega.io) (PSP), за ней — **тонкий общий API** (один на все домены; держит креды Platega server-side; CORS на домены-лендинги). Лендинг — статика, дёргает API через `fetch`. Platega не выдаёт товар сам — **ключ выдаёт наш бэкенд** по webhook'у.
 
-Контракт, который должен реализовать этот API:
-- `POST {apiBase}/pay` — тело `{ plan, email, method, attr }`. Создаёт счёт в Lava.top на товар `checkout.products[plan]`, ставит `success_url = https://<домен>/success/?order=<id>`, отдаёт `{ "url": "<checkout Lava>" }`.
-- `GET {apiBase}/key?order=<id>` — отдаёт `{ "key": "<ключ Xor>" }` после подтверждённой оплаты (Lava webhook). До подтверждения — пустой ответ (фронт поллит).
+Контракт:
+- `POST {apiBase}/pay` — тело `{ plan, email, method, attr }`. Создаёт транзакцию Platega (сумма из `api/products.json[plan]`), `returnUrl = https://<домен>/success/?order=<id>`, отдаёт `{ "url": "<страница оплаты Platega>" }`.
+- `POST {apiBase}/webhook/platega` — Platega присылает `CONFIRMED` → бэкенд выдаёт ключ (`issueKey`) и сохраняет под order.
+- `GET {apiBase}/key?order=<id>` — `{ "key": "<ключ Xor>" }` после оплаты (фронт поллит).
 
-Готовый сервис — в [`api/`](./api/) (`cd api && npm install && npm run smoke` — демо без кредов; настройка и контракт — в `api/README.md`). Настройка: завести товары в Lava.top → их id в `api/products.json` → указать URL сервиса в `checkout.apiBase` конфига домена. Без `apiBase` `/buy` и `/success` работают в демо-режиме (заглушка ключа).
+Готовый сервис — в [`api/`](./api/) (`cd api && npm install && npm run smoke` — демо без кредов; контракт и настройка — в `api/README.md`). Настройка: креды Platega → `api/.env`, цены тарифов → `api/products.json`, webhook в кабинете Platega → `https://<api>/webhook/platega`, URL сервиса → `checkout.apiBase`. Без кредов `/buy` и `/success` работают в демо-режиме (заглушка ключа).
 
 ## Перед публикацией прогнать
 `/legal-check` (юр-гейт по №281-ФЗ) · `/seo-audit` · `/perf-check`.
