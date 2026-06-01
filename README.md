@@ -15,7 +15,7 @@ SITE=example npm run dev        # http://localhost:4321 (домен из sites/e
 ## Новый домен
 ```bash
 npm run new mydomain            # создаст sites/mydomain.json из шаблона
-# отредактируй sites/mydomain.json: domain, brand, оффер, тарифы, checkout.products, реквизиты
+# отредактируй sites/mydomain.json: domain, brand, оффер, тарифы, checkout.apiBase, реквизиты
 ```
 Либо командой Claude: `/new-landing mydomain.com <оффер>`.
 
@@ -28,7 +28,7 @@ SITE=mydomain npm run preview
 
 ## Что заполнить перед боем
 - `checkout.apiBase` — URL общего API-обёртки над Lava.top (см. ниже).
-- `checkout.products` — id товаров Lava.top для каждого тарифа (slug → productId).
+- `api/products.json` — id товаров Lava.top для каждого тарифа (slug → productId).
 - `legal.*` — реальные реквизиты продавца (ИП/ООО/самозанятый).
 - `analytics.*` — id Яндекс.Метрики / GA4.
 - `src/pages/legal/*` — **шаблоны**, финальную редакцию оферты/политики согласует юрист.
@@ -40,7 +40,7 @@ SITE=mydomain npm run preview
 - `POST {apiBase}/pay` — тело `{ plan, email, method, attr }`. Создаёт счёт в Lava.top на товар `checkout.products[plan]`, ставит `success_url = https://<домен>/success/?order=<id>`, отдаёт `{ "url": "<checkout Lava>" }`.
 - `GET {apiBase}/key?order=<id>` — отдаёт `{ "key": "<ключ Xor>" }` после подтверждённой оплаты (Lava webhook). До подтверждения — пустой ответ (фронт поллит).
 
-Настройка: завести товары в Lava.top → проставить их id в `checkout.products` → поднять API-сервис → указать его URL в `checkout.apiBase`. Без `apiBase` `/buy` и `/success` работают в демо-режиме (показывают заглушку ключа).
+Готовый сервис — в [`api/`](./api/) (`cd api && npm install && npm run smoke` — демо без кредов; настройка и контракт — в `api/README.md`). Настройка: завести товары в Lava.top → их id в `api/products.json` → указать URL сервиса в `checkout.apiBase` конфига домена. Без `apiBase` `/buy` и `/success` работают в демо-режиме (заглушка ключа).
 
 ## Перед публикацией прогнать
 `/legal-check` (юр-гейт по №281-ФЗ) · `/seo-audit` · `/perf-check`.

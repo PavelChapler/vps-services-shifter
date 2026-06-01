@@ -59,8 +59,7 @@
   "checkout": {
     "provider": "lava",
     "methods": ["card", "crypto"],
-    "apiBase": "",
-    "products": { "1month": "", "1year": "", "2years": "" }
+    "apiBase": ""
   },
   "legal": {
     "company": "ИП Пример И. И.",

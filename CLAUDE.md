@@ -70,7 +70,7 @@
 - `POST {apiBase}/pay` `{plan,email,method,attr}` → `{url}` — создаёт счёт в Lava (товар из `checkout.products[plan]`), `success_url = …/success/?order=<id>`, возвращает URL checkout'а.
 - `GET {apiBase}/key?order=<id>` → `{key}` — отдаёт выданный после оплаты ключ для показа на `/success` (фронт поллит).
 
-Фронт реализован: `/buy/[plan].astro` (создание счёта) и `/success.astro` (поллинг ключа), оба с демо-фолбэком при пустом `apiBase`. Сам API-сервис — отдельный компонент (ещё не написан).
+Фронт реализован: `/buy/[plan].astro` (создание счёта) и `/success.astro` (поллинг ключа), оба с демо-фолбэком при пустом `apiBase`. **API-сервис написан в `api/`** (Node + Express + `node:sqlite`): `/pay`, `/key`, webhook Lava, пул ключей + TODO под реальный минт Xor; демо-режим без кредов (`cd api && npm run smoke`).
 
 **Страницы оплаты** `/buy/<slug>` и `/success` — `noindex`. Тарифы/цены/оферта на сайте совпадают с реальными.
 
@@ -101,6 +101,7 @@ phantom-lendings/
   public/                     — фавиконы, og-картинки, robots.txt
   astro.config.mjs
   package.json
+  api/                        — общий backend над Lava.top (Node+Express+SQLite): /pay, /key, webhook
   .claude/                    — инфраструктура Claude (этот каталог)
   transcription_readable.md   — справочник по интернет-маркетингу (референс копирайтинга)
 ```
