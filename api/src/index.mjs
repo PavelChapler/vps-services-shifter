@@ -1,7 +1,7 @@
 import express from 'express';
 import crypto from 'node:crypto';
 import { pathToFileURL } from 'node:url';
-import { PORT, products, ALLOWED_ORIGINS, PLATEGA_MERCHANT_ID } from './config.mjs';
+import { PORT, products, ALLOWED_ORIGINS, PLATEGA_MERCHANT_ID, PUBLIC_BASE_URL } from './config.mjs';
 import { createOrder, getOrder, markPaidWithKey } from './db.mjs';
 import { createTransaction, verifyWebhook } from './platega.mjs';
 import { issueKey } from './keys.mjs';
@@ -32,7 +32,8 @@ app.post('/pay', async (req, res) => {
     if (!product) return res.status(400).json({ error: 'unknown plan' });
 
     const orderId = crypto.randomUUID();
-    const origin = req.headers.origin || '';
+    // База URL для returnUrl/failedUrl: тело запроса (фронт шлёт location.origin) → заголовок Origin → env-фолбэк.
+    const origin = (req.body && req.body.origin) || req.headers.origin || PUBLIC_BASE_URL || '';
     const returnUrl = `${origin}/success/?order=${orderId}`;
     const failedUrl = `${origin}/buy/${plan}/?failed=1`;
 
@@ -41,7 +42,12 @@ app.post('/pay', async (req, res) => {
       createOrder({ id: orderId, plan, email, origin });
       const key = issueKey({ id: orderId, plan });
       if (key) markPaidWithKey(orderId, key);
-      return res.json({ url: returnUrl, order: orderId, demo: true });
+      return res.json({ url: returnUrl || `/success/?order=${orderId}`, order: orderId, demo: true });
+    }
+
+    // Platega требует абсолютные http(s) URL. Лучше понятная ошибка, чем 400 VAL_0001 от провайдера.
+    if (!/^https?:\/\//i.test(origin)) {
+      return res.status(400).json({ error: 'origin required: задайте заголовок Origin или PUBLIC_BASE_URL' });
     }
 
     const { url, transactionId } = await createTransaction({ orderId, method, product, returnUrl, failedUrl });

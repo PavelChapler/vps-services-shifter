@@ -1,16 +1,32 @@
 ---
+import Icon from './Icon.astro';
 const { site } = Astro.props;
+const features = site.features ?? [];
+const f = site.featuresSection ?? {};
 ---
 <section class="section" id="features">
   <div class="container">
-    <h2 class="center">Почему это удобно</h2>
-    <div class="grid cols-3" style="margin-top:28px">
-      {site.features.map((f) => (
-        <div class="card">
-          <h3>{f.title}</h3>
-          <p>{f.text}</p>
+    <div class="sec-head">
+      <span class="eyebrow">{f.eyebrow ?? `Почему ${site.brand}`}</span>
+      <h2>{f.title ?? 'Приватность без компромиссов'}</h2>
+      {f.sub && <p>{f.sub}</p>}
+    </div>
+    <div class="grid cols-3">
+      {features.map((item) => (
+        <div class="card feat">
+          <div class="ic"><Icon name={item.icon ?? 'check'} size={22} class="gold" /></div>
+          <h3>{item.title}</h3>
+          <p>{item.text}</p>
         </div>
       ))}
     </div>
   </div>
 </section>
+<style>
+  .feat { display: flex; flex-direction: column; }
+  .feat .ic { width: 42px; height: 42px; border-radius: 11px; display: grid; place-items: center; margin-bottom: 16px;
+    background: color-mix(in srgb, var(--accent) 10%, transparent);
+    border: 1px solid color-mix(in srgb, var(--accent) 22%, transparent); }
+  .feat h3 { font-weight: 700; }
+  .feat p { margin: 0; font-size: 14.5px; color: var(--muted-strong); }
+</style>

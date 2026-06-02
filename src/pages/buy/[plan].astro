@@ -9,31 +9,35 @@ export function getStaticPaths() {
 
 const site = loadSite();
 const { plan } = Astro.props;
+const methods = site.checkout?.methods ?? ['card'];
+const methodLabels = { card: 'Карта Мир / СБП', crypto: 'Криптовалюта (USDT)' };
 ---
 <Base site={site} title={`Оформление — ${plan.name} · ${site.brand}`} description="Оформление подписки." noindex={true}>
   <main class="section"><div class="container checkout">
     <h1>Оформление</h1>
     <div class="card summary">
-      <div class="row"><span>Тариф</span><strong>{plan.name}</strong></div>
-      <div class="row"><span>Стоимость</span><strong>{plan.price}{plan.priceNote ? ` · ${plan.priceNote}` : ''}</strong></div>
+      <div class="row"><span class="muted">Тариф</span><strong>{plan.name}</strong></div>
+      <div class="row"><span class="muted">Стоимость</span><strong>{plan.price}{plan.priceNote ? ` · ${plan.priceNote}` : ''}</strong></div>
     </div>
     <form id="checkout" class="card">
-      <label>E-mail (для чека и доступа)
-        <input type="email" name="email" required placeholder="you@example.com" />
+      <label class="field">E-mail (для чека и доступа)
+        <input type="email" name="email" required autocomplete="email" placeholder="you@example.com" />
       </label>
       <fieldset>
         <legend>Способ оплаты</legend>
-        <label><input type="radio" name="method" value="card" checked /> Карта Мир / СБП</label>
-        <label><input type="radio" name="method" value="crypto" /> Криптовалюта (USDT)</label>
+        {methods.map((m, i) => (
+          <label class="pay-opt"><input type="radio" name="method" value={m} checked={i === 0} /> {methodLabels[m] ?? m}</label>
+        ))}
       </fieldset>
-      <label class="agree"><input type="checkbox" name="agree" required /> Соглашаюсь с <a href={site.legal?.offerUrl}>офертой</a> и <a href={site.legal?.privacyUrl}>политикой конфиденциальности</a></label>
+      <label class="agree"><input type="checkbox" name="agree" required /> <span>Соглашаюсь с <a href={site.legal?.offerUrl}>офертой</a> и <a href={site.legal?.privacyUrl}>политикой конфиденциальности</a></span></label>
       <button class="btn btn-primary" type="submit">Оплатить {plan.price}</button>
+      <p class="secure-note muted small">Платёж защищён. Ключ доступа выдаётся сразу после оплаты.</p>
     </form>
   </div></main>
 
   <script define:vars={{ slug: plan.slug, apiBase: site.checkout?.apiBase ?? '' }}>
-    // Поток: создать счёт через общий API-обёртку над Lava.top → редирект на checkout Lava.
-    // API: POST {apiBase}/pay { plan, email, method, attr } → { url }. success_url у Lava = /success/?order=<id>.
+    // Поток: создать транзакцию через общий API-обёртку над Platega → редирект на оплату Platega.
+    // API: POST {apiBase}/pay { plan, email, method, attr } → { url }. returnUrl у Platega = /success/?order=<id>.
     document.getElementById('checkout').addEventListener('submit', function (e) {
       e.preventDefault();
       var attr = {};
@@ -53,7 +57,7 @@ const { plan } = Astro.props;
       fetch(apiBase.replace(/\/$/, '') + '/pay', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ plan: slug, email: fd.get('email'), method: fd.get('method') || 'card', attr: attr }),
+        body: JSON.stringify({ plan: slug, email: fd.get('email'), method: fd.get('method') || 'card', attr: attr, origin: location.origin }),
       })
         .then(function (r) { return r.json(); })
         .then(function (d) {
@@ -66,11 +70,20 @@ const { plan } = Astro.props;
 </Base>
 <style>
   .checkout { max-width: 560px; }
-  .summary .row { display: flex; justify-content: space-between; padding: 6px 0; }
-  form label { display: block; margin-bottom: 14px; }
-  input[type=email] { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg-soft); color: var(--fg); margin-top: 6px; }
-  fieldset { border: 1px solid var(--line); border-radius: 10px; margin: 0 0 16px; padding: 12px 16px; }
-  fieldset label, .agree { display: flex; gap: 8px; align-items: center; margin: 8px 0; }
-  .agree { font-size: 14px; color: var(--muted); }
-  .btn { width: 100%; }
+  .checkout h1 { font-size: clamp(28px, 4vw, 40px); margin-bottom: 22px; }
+  .summary { margin-bottom: 16px; display: grid; gap: 8px; }
+  .summary .row { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; }
+  .field { display: block; margin-bottom: 18px; color: var(--muted-strong); font-size: 14px; }
+  input[type=email] { width: 100%; padding: 13px 14px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg-2); color: var(--fg); margin-top: 8px; font: inherit; transition: border-color .2s; }
+  input[type=email]:focus { outline: none; border-color: var(--accent); }
+  fieldset { border: 1px solid var(--line); border-radius: 12px; margin: 0 0 16px; padding: 8px 16px 12px; }
+  legend { font-size: 13px; color: var(--muted); padding: 0 6px; }
+  .pay-opt, .agree { display: flex; gap: 10px; align-items: center; margin: 10px 0; }
+  .pay-opt { cursor: pointer; }
+  .agree { font-size: 14px; color: var(--muted); align-items: flex-start; }
+  .agree a { color: var(--muted-strong); text-decoration: underline; }
+  .agree a:hover { color: var(--fg); }
+  input[type=radio], input[type=checkbox] { accent-color: var(--accent); width: 17px; height: 17px; flex: none; }
+  .btn { width: 100%; margin-top: 4px; }
+  .secure-note { text-align: center; margin: 14px 0 0; }
 </style>

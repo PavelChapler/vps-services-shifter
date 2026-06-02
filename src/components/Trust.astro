@@ -1,30 +1,30 @@
 ---
 const { site } = Astro.props;
-const t = site.trust ?? {};
+const reviews = site.trust?.reviews ?? [];
+const r = site.reviewsSection ?? {};
 ---
-<section class="section" id="trust">
-  <div class="container">
-    {t.stats && (
-      <div class="grid cols-3">
-        {t.stats.map((s) => (
-          <div class="stat center"><div class="stat-v">{s.value}</div><div class="muted">{s.label}</div></div>
-        ))}
+{reviews.length > 0 && (
+  <section class="section" id="reviews">
+    <div class="container">
+      <div class="sec-head">
+        <span class="eyebrow">{r.eyebrow ?? 'Отзывы'}</span>
+        <h2>{r.title ?? 'Нам доверяют'}</h2>
       </div>
-    )}
-    {t.reviews && (
-      <div class="grid cols-2" style="margin-top:32px">
-        {t.reviews.map((r) => (
+      <div class="grid cols-2">
+        {reviews.map((rev) => (
           <figure class="card review">
-            <blockquote>«{r.text}»</blockquote>
-            <figcaption class="muted">— {r.name}</figcaption>
+            <div class="stars" aria-hidden="true">★★★★★</div>
+            <blockquote>«{rev.text}»</blockquote>
+            <figcaption>— {rev.name}</figcaption>
           </figure>
         ))}
       </div>
-    )}
-  </div>
-</section>
+    </div>
+  </section>
+)}
 <style>
-  .stat-v { font-size: clamp(30px,5vw,46px); font-weight: 700; color: var(--accent-2); }
-  figure { margin: 0; }
-  .review blockquote { margin: 0 0 .6em; }
+  .review { margin: 0; display: flex; flex-direction: column; gap: 12px; }
+  .review .stars { color: var(--accent); letter-spacing: 2px; font-size: 14px; }
+  .review blockquote { margin: 0; font-size: 16px; color: var(--fg); line-height: 1.6; }
+  .review figcaption { color: var(--muted); font-family: var(--font-mono); font-size: 12.5px; letter-spacing: .04em; }
 </style>

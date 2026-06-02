@@ -1,8 +1,9 @@
 ---
-const { href, label, variant = 'primary', external = false } = Astro.props;
+const { href, label, variant = 'primary', size = '', external = false, class: cls = '' } = Astro.props;
+const klass = ['btn', `btn-${variant}`, size && `btn-${size}`, cls].filter(Boolean).join(' ');
 ---
 {external ? (
-  <a class={`btn btn-${variant}`} href={href} rel="nofollow" target="_blank">{label}</a>
+  <a class={klass} href={href} rel="nofollow" target="_blank">{label}</a>
 ) : (
-  <a class={`btn btn-${variant}`} href={href}>{label}</a>
+  <a class={klass} href={href}>{label}</a>
 )}

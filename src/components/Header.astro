@@ -1,0 +1,28 @@
+---
+const { site } = Astro.props;
+const links = [
+  { href: '/#features', label: 'Возможности' },
+  { href: '/#pricing', label: 'Тарифы' },
+  { href: '/#faq', label: 'Вопросы' },
+];
+const cta = site.hero?.cta ?? 'Подключить';
+---
+<header class="site-nav">
+  <div class="container bar">
+    <a class="brand" href="/"><span class="mark" aria-hidden="true">◆</span>{site.brand}</a>
+    <nav class="links" aria-label="Основная навигация">
+      {links.map((l) => <a href={l.href}>{l.label}</a>)}
+    </nav>
+    <a class="btn btn-primary btn-sm" href="/#pricing">{cta}</a>
+  </div>
+</header>
+<style>
+  .site-nav { position: sticky; top: 0; z-index: 50; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); background: color-mix(in srgb, var(--bg) 72%, transparent); border-bottom: 1px solid var(--line-soft); }
+  .bar { display: flex; align-items: center; justify-content: space-between; height: 66px; }
+  .brand { font-weight: 800; font-size: 20px; letter-spacing: .04em; text-transform: uppercase; display: flex; align-items: center; gap: .5em; }
+  .brand .mark { color: var(--accent); font-size: 13px; }
+  .links { display: flex; gap: 30px; align-items: center; font-size: 14px; color: var(--muted); }
+  .links a { transition: color .2s; }
+  .links a:hover { color: var(--fg); }
+  @media (max-width: 820px) { .links { display: none; } }
+</style>

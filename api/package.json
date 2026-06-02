@@ -3,7 +3,7 @@
   "type": "module",
   "version": "0.1.0",
   "private": true,
-  "description": "Общий API-обёртка над Lava.top: создание счёта + выдача ключа Xor. Один на все домены-лендинги.",
+  "description": "Общий API-обёртка над Platega: создание транзакции + выдача ключа Xor по webhook. Один на все домены-лендинги.",
   "scripts": {
     "start": "node --env-file-if-exists=.env src/index.mjs",
     "dev": "node --watch --env-file-if-exists=.env src/index.mjs",

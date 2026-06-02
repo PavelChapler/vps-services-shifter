@@ -1,25 +1,37 @@
 ---
 const { site } = Astro.props;
+const faq = site.faq ?? [];
+const sec = site.faqSection ?? {};
 ---
-<section class="section" id="faq">
-  <div class="container faq-wrap">
-    <h2 class="center">Частые вопросы</h2>
-    <div style="margin-top:24px">
-      {site.faq.map((f) => (
-        <details class="card">
-          <summary>{f.q}</summary>
-          <p>{f.a}</p>
-        </details>
-      ))}
+{faq.length > 0 && (
+  <section class="section" id="faq">
+    <div class="container faq-wrap">
+      <div class="sec-head">
+        <span class="eyebrow">{sec.eyebrow ?? 'Вопросы'}</span>
+        <h2>{sec.title ?? 'Частые вопросы'}</h2>
+      </div>
+      <div class="list">
+        {faq.map((f) => (
+          <details class="card">
+            <summary>{f.q}<span class="ind" aria-hidden="true"></span></summary>
+            <p>{f.a}</p>
+          </details>
+        ))}
+      </div>
     </div>
-  </div>
-</section>
+  </section>
+)}
 <style>
   .faq-wrap { max-width: 760px; }
-  details { margin-bottom: 12px; }
-  summary { cursor: pointer; font-weight: 600; list-style: none; }
+  .list { display: grid; gap: 12px; }
+  details { padding: 18px 22px; }
+  summary { cursor: pointer; font-weight: 600; list-style: none; display: flex; justify-content: space-between; align-items: center; gap: 16px; color: var(--fg); }
   summary::-webkit-details-marker { display: none; }
-  summary::after { content: "+"; float: right; color: var(--accent); }
-  details[open] summary::after { content: "–"; }
-  details p { margin: 14px 0 0; }
+  .ind { position: relative; width: 14px; height: 14px; flex: none; }
+  .ind::before, .ind::after { content: ""; position: absolute; background: var(--accent); border-radius: 2px; transition: transform .2s; }
+  .ind::before { top: 6px; left: 0; width: 14px; height: 2px; }
+  .ind::after { top: 0; left: 6px; width: 2px; height: 14px; }
+  details[open] .ind::after { transform: scaleY(0); }
+  details[open] summary { color: var(--accent); }
+  details p { margin: 14px 0 0; color: var(--muted-strong); }
 </style>

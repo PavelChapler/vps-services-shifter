@@ -1,0 +1,23 @@
+---
+const { site } = Astro.props;
+const stats = site.trust?.stats ?? [];
+---
+{stats.length > 0 && (
+  <section class="stats">
+    <div class="container row">
+      {stats.map((s) => (
+        <div class="stat">
+          <div class="num">{s.value}</div>
+          <div class="lab">{s.label}</div>
+        </div>
+      ))}
+    </div>
+  </section>
+)}
+<style>
+  .stats { border-block: 1px solid var(--line-soft); background: linear-gradient(180deg, var(--bg-2), transparent); }
+  .row { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 20px; padding-block: 34px; text-align: center; }
+  .stat .num { font-size: clamp(26px, 3.4vw, 38px); font-weight: 800; letter-spacing: -.02em; line-height: 1; }
+  .stat .lab { margin-top: 8px; font-size: 13px; color: var(--muted); font-family: var(--font-mono); letter-spacing: .06em; }
+  @media (max-width: 680px) { .row { grid-template-columns: repeat(2, 1fr); gap: 28px 16px; } }
+</style>

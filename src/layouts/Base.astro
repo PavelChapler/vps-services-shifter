@@ -1,5 +1,6 @@
 ---
 import '../styles/global.css';
+import Header from '../components/Header.astro';
 
 const { site, title, description, noindex = false } = Astro.props;
 const seo = site.seo;
@@ -7,6 +8,19 @@ const pageTitle = title ?? seo.title;
 const pageDesc = description ?? seo.description;
 const canonical = new URL(Astro.url.pathname, Astro.site).href;
 const ogImage = seo.ogImage ? new URL(seo.ogImage, Astro.site).href : null;
+
+// ---- Пер-доменная тема (палитра + шрифты) из sites/<domain>.json ----
+// Ключи theme.colors мапятся в CSS-переменные :root; дефолт — в global.css.
+const theme = site.theme ?? {};
+const colorVars = Object.entries(theme.colors ?? {})
+  .map(([k, v]) => `--${k}:${v}`)
+  .join(';');
+const sans = theme.fonts?.sans ?? 'Manrope';
+const mono = theme.fonts?.mono ?? 'JetBrains Mono';
+const fontHref = theme.fonts?.googleHref
+  ?? 'https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap';
+const fontVars = `--font-sans:"${sans}",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;--font-mono:"${mono}",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace`;
+const rootStyle = `:root{${[fontVars, colorVars].filter(Boolean).join(';')}}`;
 
 const org = {
   '@context': 'https://schema.org',
@@ -55,9 +69,19 @@ const faq = site.faq?.length
     <meta property="og:title" content={pageTitle} />
     <meta property="og:description" content={pageDesc} />
     <meta property="og:url" content={canonical} />
-    {ogImage && <meta property="og:image" content={ogImage} />}
+    {ogImage && (
+      <Fragment>
+        <meta property="og:image" content={ogImage} />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta property="og:image:alt" content={pageTitle} />
+      </Fragment>
+    )}
     <meta name="twitter:card" content="summary_large_image" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href={fontHref} />
     <script type="application/ld+json" set:html={JSON.stringify(org)} />
     <script type="application/ld+json" set:html={JSON.stringify(service)} />
     {faq && <script type="application/ld+json" set:html={JSON.stringify(faq)} />}
@@ -70,8 +94,10 @@ const faq = site.faq?.length
     {site.analytics?.yandexMetrika && (
       <script is:inline set:html={`(function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};m[i].l=1*new Date();k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})(window,document,'script','https://mc.yandex.ru/metrika/tag.js','ym');ym(${site.analytics.yandexMetrika},'init',{clickmap:true,trackLinks:true,accurateTrackBounce:true});`} />
     )}
+    <style is:inline set:html={rootStyle}></style>
   </head>
   <body>
+    <Header site={site} />
     <slot />
     <script is:inline>
       // Захват меток атрибуции (ymid/gcid/fcid/utm_*) и пронос их в ссылки /buy → дальше в оплату/success.

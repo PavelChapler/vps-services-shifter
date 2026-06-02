@@ -1,0 +1,18 @@
+---
+// Набор inline-SVG иконок (stroke-based, в стиле Lucide). Без эмодзи — см. правила скилла.
+const { name, size = 24, stroke = 1.7, class: cls = '' } = Astro.props;
+const paths = {
+  shield: '<path d="M12 3l7 3v5c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z"/>',
+  'shield-check': '<path d="M12 3l7 3v5c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z"/><path d="M9 12l2 2 4-4"/>',
+  lock: '<rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/>',
+  bolt: '<path d="M13 2L3 14h7l-1 8 10-12h-7z"/>',
+  globe: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 2.5 15.3 0 18M12 3c-2.5 2.7-2.5 15.3 0 18"/>',
+  wifi: '<path d="M5 12.5a10 10 0 0 1 14 0"/><path d="M8 16a5 5 0 0 1 8 0"/><circle cx="12" cy="19.5" r="1"/>',
+  clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  check: '<path d="M5 13l4 4L19 7"/>',
+  'eye-off': '<path d="M3 3l18 18"/><path d="M10.6 10.6a2 2 0 0 0 2.8 2.8"/><path d="M9.4 5.2A9.5 9.5 0 0 1 12 5c5 0 9 4.5 10 7a16 16 0 0 1-2.7 3.6M6.2 6.7C3.9 8.1 2.4 10.3 2 12c1 2.5 5 7 10 7 1 0 2-.2 2.9-.5"/>',
+  server: '<rect x="3" y="4" width="18" height="7" rx="2"/><rect x="3" y="13" width="18" height="7" rx="2"/><path d="M7 7.5h.01M7 16.5h.01"/>',
+};
+const d = paths[name] ?? paths.check;
+---
+<svg class={cls} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width={stroke} stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" set:html={d}></svg>

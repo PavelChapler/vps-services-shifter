@@ -1,17 +1,74 @@
 ---
 import CtaButton from './CtaButton.astro';
+import Icon from './Icon.astro';
 const { site } = Astro.props;
-const h = site.hero;
+const h = site.hero ?? {};
+const ticks = h.ticks ?? [];
+const social = h.social; // { rating, count }
+const showWreath = site.theme?.signature !== false;
 ---
-<header class="section hero">
-  <div class="container center">
-    {h.eyebrow && <span class="eyebrow">{h.eyebrow}</span>}
-    <h1>{h.h1}</h1>
-    <p class="lead center">{h.sub}</p>
-    <div class="hero-cta"><CtaButton href="#pricing" label={h.cta} /></div>
+<section class="section hero">
+  {showWreath && (
+    <div class="wreath" aria-hidden="true"><span class="rays"></span><span class="rays fine"></span></div>
+  )}
+  <div class="container">
+    {h.chip && <span class="chip"><span class="dot"></span>{h.chip}</span>}
+    <h1>{h.h1}{h.h1dim && <span class="dim"> {h.h1dim}</span>}</h1>
+    {h.sub && <p class="lead">{h.sub}</p>}
+    {ticks.length > 0 && (
+      <div class="ticks">
+        {ticks.map((t) => (
+          <span><Icon name="check" size={16} stroke={2.6} class="gold" />{t}</span>
+        ))}
+      </div>
+    )}
+    <div class="hero-cta">
+      <CtaButton href="#pricing" label={h.cta ?? 'Выбрать тариф'} size="lg" />
+      {h.cta2 && <CtaButton href={h.cta2href ?? '#features'} label={h.cta2} variant="ghost" size="lg" />}
+    </div>
+    {h.ctaMicro && <div class="cta-micro mono">{h.ctaMicro}</div>}
+    {social && (
+      <div class="social">
+        <span class="avatars" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+        <span class="stars" aria-hidden="true">
+          {Array.from({ length: 5 }).map(() => (
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3 6.3 6.9.9-5 4.8 1.2 6.8L12 17.8 5.9 20.8 7.1 14 2.1 9.2 9 8.3z"/></svg>
+          ))}
+        </span>
+        {social.rating && <b>{social.rating}</b>}{social.count && <span> · {social.count}</span>}
+      </div>
+    )}
   </div>
-</header>
+</section>
 <style>
-  .hero { padding-top: clamp(56px, 9vw, 110px); background: radial-gradient(80% 120% at 50% -20%, rgba(91,140,255,.18), transparent 60%); }
-  .hero-cta { margin-top: 26px; }
+  .hero { padding-top: clamp(104px, 14vw, 168px); padding-bottom: clamp(50px, 7vw, 84px); text-align: center; position: relative; isolation: isolate; }
+  .wreath { position: absolute; top: clamp(12px, 2.5vw, 46px); left: 50%; transform: translateX(-50%); width: min(470px, 76vw); aspect-ratio: 1; z-index: -2; pointer-events: none; }
+  .wreath::before { content: ""; position: absolute; inset: 18%; border-radius: 50%; background: radial-gradient(circle, var(--accent-glow) 0%, transparent 60%); filter: blur(6px); opacity: .55; }
+  .wreath .rays { position: absolute; inset: 0; border-radius: 50%;
+    background: repeating-conic-gradient(from 0deg, var(--accent) 0deg .32deg, transparent .32deg 6deg);
+    -webkit-mask: radial-gradient(circle, transparent 33%, #000 41%, #000 50%, transparent 66%);
+            mask: radial-gradient(circle, transparent 33%, #000 41%, #000 50%, transparent 66%);
+    opacity: .46; filter: drop-shadow(0 0 6px var(--accent-glow)); }
+  .wreath .rays.fine {
+    background: repeating-conic-gradient(from 3deg, var(--accent-bright) 0deg .18deg, transparent .18deg 3deg);
+    -webkit-mask: radial-gradient(circle, transparent 36%, #000 43%, #000 47%, transparent 58%);
+            mask: radial-gradient(circle, transparent 36%, #000 43%, #000 47%, transparent 58%);
+    opacity: .32; }
+  .hero .container { position: relative; }
+  .hero .container::before { content: ""; position: absolute; left: 50%; top: 46%; transform: translate(-50%, -50%); width: min(860px, 99vw); height: 128%; z-index: -1; pointer-events: none;
+    background: radial-gradient(56% 56% at 50% 50%, var(--bg) 36%, color-mix(in srgb, var(--bg) 82%, transparent) 54%, transparent 76%); }
+  .hero h1 { max-width: 15ch; margin-inline: auto; }
+  .hero h1 .dim { color: var(--muted); font-weight: 300; }
+  .chip { margin-bottom: 22px; }
+  .lead { margin: 20px auto 0; }
+  .ticks { display: flex; gap: 22px; justify-content: center; flex-wrap: wrap; margin-top: 22px; font-size: 14px; color: var(--muted-strong); }
+  .ticks span { display: inline-flex; align-items: center; gap: 8px; }
+  .hero-cta { margin-top: 30px; display: flex; gap: 13px; justify-content: center; flex-wrap: wrap; }
+  .cta-micro { margin-top: 14px; font-size: 12.5px; color: var(--muted); letter-spacing: .03em; }
+  .social { margin-top: 30px; display: inline-flex; align-items: center; gap: 12px; color: var(--muted-strong); font-size: 14px; flex-wrap: wrap; justify-content: center; }
+  .social b { color: var(--fg); }
+  .stars { display: inline-flex; gap: 2px; color: var(--accent); }
+  .avatars { display: inline-flex; }
+  .avatars i { width: 26px; height: 26px; border-radius: 50%; border: 1.5px solid var(--bg); background: linear-gradient(135deg, #2a2f3a, #161922); margin-left: -8px; display: inline-block; }
+  .avatars i:first-child { margin-left: 0; }
 </style>

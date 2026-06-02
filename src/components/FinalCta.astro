@@ -1,0 +1,22 @@
+---
+import CtaButton from './CtaButton.astro';
+const { site } = Astro.props;
+const c = site.finalCta;
+---
+{c && (
+  <section class="section">
+    <div class="container">
+      <div class="cta-band">
+        <h2>{c.title}</h2>
+        {c.text && <p>{c.text}</p>}
+        <CtaButton href="#pricing" label={c.cta ?? 'Выбрать тариф'} size="lg" />
+      </div>
+    </div>
+  </section>
+)}
+<style>
+  .cta-band { position: relative; text-align: center; border: 1px solid var(--line); border-radius: 22px; padding: clamp(40px, 6vw, 68px); background: linear-gradient(180deg, var(--card-2), var(--card)); overflow: hidden; isolation: isolate; }
+  .cta-band::before { content: ""; position: absolute; top: -60%; left: 50%; transform: translateX(-50%); width: 520px; height: 520px; z-index: -1; background: radial-gradient(circle, var(--accent-glow) 0%, transparent 60%); opacity: .5; pointer-events: none; }
+  .cta-band h2 { font-size: clamp(28px, 4.2vw, 46px); }
+  .cta-band p { max-width: 48ch; margin: 0 auto 24px; }
+</style>

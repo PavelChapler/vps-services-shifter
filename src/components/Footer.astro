@@ -7,7 +7,7 @@ const year = new Date().getFullYear();
   <div class="container">
     <div class="foot-grid">
       <div>
-        <strong>{site.brand}</strong>
+        <div class="brand"><span class="mark" aria-hidden="true">◆</span>{site.brand}</div>
         <p class="muted small">{l.company}{l.inn ? ` · ИНН ${l.inn}` : ''}</p>
       </div>
       <nav class="foot-links">
@@ -20,10 +20,12 @@ const year = new Date().getFullYear();
   </div>
 </footer>
 <style>
-  .footer { border-top: 1px solid var(--line); padding-block: 40px; }
-  .foot-grid { display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
+  .footer { border-top: 1px solid var(--line-soft); padding-block: 40px; margin-top: 40px; }
+  .foot-grid { display: flex; justify-content: space-between; gap: 24px; flex-wrap: wrap; align-items: flex-start; }
+  .brand { font-weight: 800; font-size: 18px; letter-spacing: .04em; text-transform: uppercase; display: flex; align-items: center; gap: .5em; margin-bottom: 8px; }
+  .brand .mark { color: var(--accent); font-size: 12px; }
   .foot-links { display: flex; gap: 18px; flex-wrap: wrap; align-items: center; }
-  .foot-links a { color: var(--muted); text-decoration: none; font-size: 14px; }
+  .foot-links a { color: var(--muted); font-size: 14px; }
   .foot-links a:hover { color: var(--fg); }
   .small { font-size: 13px; }
   .copyright { margin-top: 18px; }
