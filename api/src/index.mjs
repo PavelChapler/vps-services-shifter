@@ -40,7 +40,7 @@ app.post('/pay', async (req, res) => {
     // Демо-режим без кредов Platega: считаем оплаченным сразу и выдаём ключ из пула.
     if (!PLATEGA_MERCHANT_ID) {
       createOrder({ id: orderId, plan, email, origin });
-      const key = issueKey({ id: orderId, plan });
+      const key = await issueKey({ id: orderId, plan });
       if (key) markPaidWithKey(orderId, key);
       return res.json({ url: returnUrl || `/success/?order=${orderId}`, order: orderId, demo: true });
     }
@@ -68,7 +68,7 @@ app.get('/key', (req, res) => {
 });
 
 // --- POST /webhook/platega → подтверждение оплаты, выдача ключа ---
-app.post('/webhook/platega', (req, res) => {
+app.post('/webhook/platega', async (req, res) => {
   if (!verifyWebhook(req.headers)) return res.sendStatus(401);
 
   const raw = Buffer.isBuffer(req.body) ? req.body.toString('utf8') : '';
@@ -81,7 +81,7 @@ app.post('/webhook/platega', (req, res) => {
 
   const order = getOrder(orderId);
   if (order && order.status !== 'paid') {
-    const key = issueKey(order);
+    const key = await issueKey(order);
     if (key) markPaidWithKey(order.id, key);
     // TODO: продублировать ключ на email (как обещано на /success).
   }

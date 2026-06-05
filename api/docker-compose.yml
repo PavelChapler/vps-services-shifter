@@ -1,0 +1,28 @@
+services:
+  phantom-api:
+    build: .
+    container_name: phantom-api
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      # URL бота во внутренней docker-сети (по имени контейнера)
+      BOT_API_BASE: "http://remnawave_bot:8080"
+      DB_PATH: "/data/data.db"
+      PORT: "8787"
+    ports:
+      # Только на localhost — наружу отдаёт host Caddy (reverse_proxy на этот порт)
+      - "127.0.0.1:8790:8787"
+    volumes:
+      - phantom_api_data:/data
+    networks:
+      - bot_network
+
+volumes:
+  phantom_api_data:
+
+networks:
+  # Подключаемся к уже существующей сети бота, чтобы достучаться до remnawave_bot
+  bot_network:
+    external: true
+    name: xorvpn-bot_bot_network
